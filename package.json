@@ -5,11 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node scripts/sync-docs.mjs",
     "lint": "eslint .",
     "test": "node scripts/smoke-test.mjs",
     "preview": "vite preview",
-    "deploy": "npm run build && gh-pages -d dist"
+    "deploy": "npm run build && gh-pages -d docs"
   },
   "dependencies": {
     "react": "^19.2.6",
