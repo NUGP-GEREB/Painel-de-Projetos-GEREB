@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/Painel/',
+  base: './',
   plugins: [react()],
   build: {
     sourcemap: false,
