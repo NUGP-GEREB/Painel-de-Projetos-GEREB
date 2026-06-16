@@ -3,7 +3,7 @@
 Dashboard executivo em React/Vite para leitura financeira e operacional da carteira de projetos Fiotec/Fiocruz Brasília.
 
 Publicação no GitHub Pages:
-https://guilhermegalvaosilva.github.io/-Painel-de-Controle-Financeiro/
+https://nugp-gereb.github.io/Painel/
 
 ## Organização
 
