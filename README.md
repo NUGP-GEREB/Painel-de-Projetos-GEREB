@@ -3,7 +3,7 @@
 Dashboard executivo em React/Vite para leitura financeira e operacional da carteira de projetos Fiotec/Fiocruz Brasília.
 
 Publicação no GitHub Pages:
-https://nugp-gereb.github.io/Painel/
+https://nugp-gereb.github.io/Painel-de-Projetos-GEREB/
 
 ## Organização
 
