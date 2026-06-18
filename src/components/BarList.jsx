@@ -57,6 +57,8 @@ export function BarList({
               'ranking-row',
               wideLabels ? 'ranking-row--wide-label' : '',
               roomyLabels ? 'ranking-row--roomy-label' : '',
+              fullValues ? 'ranking-row--full-value' : '',
+              item.value < 0 ? 'ranking-row--negative' : '',
             ].filter(Boolean).join(' ')}
             key={item.label}
           >
