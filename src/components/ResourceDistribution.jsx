@@ -1,24 +1,5 @@
 import { brl } from '../utils/formatters'
 
-const resources = [
-  {
-    label: 'TED MS',
-    value: 447407974.4,
-    color: '#2EA6A1',
-  },
-  {
-    label: 'TED de SUPORTE',
-    value: 637486217,
-    color: '#124986',
-  },
-  {
-    label: 'TEDs outros Orgãos',
-    value: 213639543.95,
-    color: '#77C6CC',
-  },
-]
-
-const total = resources.reduce((sum, item) => sum + item.value, 0)
 const shareFormatter = new Intl.NumberFormat('pt-BR', {
   maximumFractionDigits: 1,
   minimumFractionDigits: 1,
@@ -46,10 +27,12 @@ function describeSlice(startPercent, endPercent) {
   ].join(' ')
 }
 
-export function ResourceDistribution() {
+export function ResourceDistribution({ items }) {
+  const resources = items.filter((item) => Number(item.value || 0) > 0)
+  const total = resources.reduce((sum, item) => sum + item.value, 0)
   const slices = resources.reduce((accumulator, item) => {
     const currentPercent = accumulator.offset
-    const share = item.value / total
+    const share = total ? item.value / total : 0
     const slice = {
       ...item,
       path: describeSlice(currentPercent, currentPercent + share),
@@ -63,36 +46,46 @@ export function ResourceDistribution() {
   }, { items: [], offset: 0 }).items
 
   return (
-    <section className="panel resource-panel" aria-label="Distribuição de Recursos - TEDs">
+    <section className="panel resource-panel" aria-label="DistribuiÃ§Ã£o de Recursos - TEDs">
       <div className="panel-title">
         <div className="title-dot" />
         <div>
-          <h2>Distribuição de Recursos - TEDs</h2>
+          <h2>DistribuiÃ§Ã£o de Recursos - TEDs</h2>
         </div>
       </div>
       <div className="resource-layout">
-        <svg className="resource-pie" viewBox="0 0 100 100" role="img" aria-label="Distribuição dos recursos por tipo de TED">
-          {slices.map((item) => (
-            <path d={item.path} fill={item.color} key={item.label}>
-              <title>
-                {item.label}: {brl.format(item.value)} ({item.shareLabel})
-              </title>
-            </path>
-          ))}
-        </svg>
+        {slices.length ? (
+          <svg className="resource-pie" viewBox="0 0 100 100" role="img" aria-label="DistribuiÃ§Ã£o dos recursos por tipo de TED">
+            {slices.map((item) => (
+              <path d={item.path} fill={item.color} key={item.label}>
+                <title>
+                  {item.label}: {brl.format(item.value)} ({item.shareLabel})
+                </title>
+              </path>
+            ))}
+          </svg>
+        ) : (
+          <div className="resource-empty" role="note">Sem TEDs no recorte</div>
+        )}
 
         <div className="resource-detail">
           <h3>Detalhamento</h3>
-          {slices.map((item) => (
-            <div className="resource-detail__row" key={item.label}>
-              <i style={{ background: item.color }} />
-              <span>{item.label}</span>
-              <strong>
-                {brl.format(item.value)}
-                <small>({item.shareLabel})</small>
-              </strong>
+          {slices.length ? (
+            slices.map((item) => (
+              <div className="resource-detail__row" key={item.label}>
+                <i style={{ background: item.color }} />
+                <span>{item.label}</span>
+                <strong>
+                  {brl.format(item.value)}
+                  <small>({item.shareLabel})</small>
+                </strong>
+              </div>
+            ))
+          ) : (
+            <div className="resource-detail__row resource-detail__row--empty">
+              <span>Nenhum recurso TED encontrado para os filtros atuais.</span>
             </div>
-          ))}
+          )}
         </div>
       </div>
     </section>

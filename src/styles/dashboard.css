@@ -1896,6 +1896,20 @@
   transform: scale(1.01);
 }
 
+.resource-empty {
+  display: grid;
+  width: min(210px, 100%);
+  aspect-ratio: 1;
+  place-items: center;
+  justify-self: center;
+  border: 1px dashed var(--line);
+  border-radius: 50%;
+  color: var(--muted);
+  background: rgba(246, 248, 250, 0.78);
+  font-size: 12px;
+  text-align: center;
+}
+
 .resource-detail {
   display: grid;
   align-self: center;
@@ -1928,6 +1942,11 @@
 
 .resource-detail__row:last-child {
   border-bottom: 0;
+}
+
+.resource-detail__row--empty {
+  grid-template-columns: 1fr;
+  color: var(--muted);
 }
 
 .resource-detail__row i {
