@@ -32,8 +32,8 @@ Error generating stack: `+e.message+`
 </Relationships>`},{name:`xl/styles.xml`,content:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
   <fonts count="2">
-    <font><sz val="11"/><color rgb="FF20323A"/><name val="Calibri"/></font>
-    <font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font>
+    <font><sz val="11"/><color rgb="FF20323A"/><name val="Aptos"/></font>
+    <font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Aptos"/></font>
   </fonts>
   <fills count="9">
     <fill><patternFill patternType="none"/></fill>
