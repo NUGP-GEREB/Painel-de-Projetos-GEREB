@@ -13,6 +13,8 @@ const shareFormatter = new Intl.NumberFormat('pt-BR', {
   maximumFractionDigits: 1,
   minimumFractionDigits: 1,
 })
+const donutCenter = 21
+const donutRadius = 15.9
 
 function formatOptionalMoney(value) {
   return typeof value === 'number' ? compactBrl.format(value) : '-'
@@ -20,6 +22,36 @@ function formatOptionalMoney(value) {
 
 function formatCount(value) {
   return `${value} projeto${value === 1 ? '' : 's'}`
+}
+
+function pointOnDonut(percent) {
+  const angle = percent * Math.PI * 2 - Math.PI / 2
+
+  return {
+    x: donutCenter + donutRadius * Math.cos(angle),
+    y: donutCenter + donutRadius * Math.sin(angle),
+  }
+}
+
+function describeArc(startPercent, endPercent) {
+  const share = endPercent - startPercent
+
+  if (share >= 0.999) {
+    return [
+      `M ${donutCenter} ${donutCenter - donutRadius}`,
+      `A ${donutRadius} ${donutRadius} 0 1 1 ${donutCenter} ${donutCenter + donutRadius}`,
+      `A ${donutRadius} ${donutRadius} 0 1 1 ${donutCenter} ${donutCenter - donutRadius}`,
+    ].join(' ')
+  }
+
+  const start = pointOnDonut(startPercent)
+  const end = pointOnDonut(endPercent)
+  const largeArcFlag = share > 0.5 ? 1 : 0
+
+  return [
+    `M ${start.x} ${start.y}`,
+    `A ${donutRadius} ${donutRadius} 0 ${largeArcFlag} 1 ${end.x} ${end.y}`,
+  ].join(' ')
 }
 
 export function DonutChart({
@@ -42,9 +74,8 @@ export function DonutChart({
   const slices = items.map((item, index) => {
     const previous = items.slice(0, index).reduce((sum, slice) => sum + slice.value, 0)
     const dash = (item.value / safeTotal) * 100
-    const offset = 25 - (previous / safeTotal) * 100
-    const midpoint = (previous + item.value / 2) / safeTotal
-    const midpointAngle = midpoint * Math.PI * 2 - Math.PI / 2
+    const startPercent = previous / safeTotal
+    const endPercent = (previous + item.value) / safeTotal
     const shareLabel = `${shareFormatter.format(dash)}%`
     const valueLabel = isCountChart ? formatCount(item.value) : compactBrl.format(item.value)
     const detailTotalValue = typeof item.detailTotalValue === 'number' ? item.detailTotalValue : item.value
@@ -76,14 +107,12 @@ export function DonutChart({
       color: item.color || colors[index % colors.length],
       committedLabel,
       dash,
-      offset,
+      path: describeArc(startPercent, endPercent),
       realizedLabel,
       shareLabel,
       detailFacts,
       detailCountLabel,
       detailTotalLabel,
-      popupX: 50 + 34 * Math.cos(midpointAngle),
-      popupY: 50 + 34 * Math.sin(midpointAngle),
       tooltip: tooltipParts.join(' | '),
       valueLabel,
     }
@@ -116,20 +145,16 @@ export function DonutChart({
           <svg className="donut" viewBox="0 0 42 42" role="img" aria-label={title}>
             <circle className="donut__track" cx="21" cy="21" r="15.9" />
             {slices.map((item, index) => (
-              <circle
+              <path
                 aria-label={`${item.label}: ${item.valueLabel}, ${item.shareLabel}`}
                 className={activeSlice === index ? 'donut__slice is-active' : 'donut__slice'}
-                cx="21"
-                cy="21"
-                fill="transparent"
+                d={item.path}
+                fill="none"
                 key={item.label}
                 onBlur={() => setActiveSlice(null)}
                 onFocus={() => setActiveSlice(index)}
                 onMouseEnter={() => setActiveSlice(index)}
-                r="15.9"
                 stroke={item.color}
-                strokeDasharray={`${item.dash} ${100 - item.dash}`}
-                strokeDashoffset={item.offset}
                 tabIndex={0}
               />
             ))}
@@ -140,28 +165,29 @@ export function DonutChart({
               total
             </text>
           </svg>
+        </div>
+        <div
+          className={activeSlice !== null ? 'donut-active-summary is-visible' : 'donut-active-summary'}
+          aria-live="polite"
+        >
           {activeSlice !== null ? (
-            <div
-              className="donut-popup"
-              style={{
-                left: `${slices[activeSlice].popupX}%`,
-                top: `${slices[activeSlice].popupY}%`,
-              }}
-            >
+            <>
               <strong>{slices[activeSlice].label}</strong>
               <span>{slices[activeSlice].valueLabel}</span>
               <b>{slices[activeSlice].shareLabel}</b>
-              {slices[activeSlice].detailFacts.length ? (
-                <small>{slices[activeSlice].detailFacts.join(' | ')}</small>
-              ) : null}
-            </div>
+            </>
           ) : null}
         </div>
         {isDetailChart ? (
           <div className="donut-detail">
             <h3>{detailTitle}</h3>
-            {slices.map((item) => (
-              <div className="donut-detail__row" key={item.label}>
+            {slices.map((item, index) => (
+              <div
+                className={activeSlice === index ? 'donut-detail__row is-active' : 'donut-detail__row'}
+                key={item.label}
+                onMouseEnter={() => setActiveSlice(index)}
+                onMouseLeave={() => setActiveSlice(null)}
+              >
                 <i style={{ background: item.color }} />
                 <span>{item.label}</span>
                 <div className="donut-detail__values">
@@ -183,8 +209,17 @@ export function DonutChart({
           </div>
         ) : (
           <div className="legend-list">
-            {slices.map((item) => (
-              <div className="legend-item has-tooltip" data-tooltip={item.tooltip} key={item.label} tabIndex={0}>
+            {slices.map((item, index) => (
+              <div
+                className="legend-item has-tooltip"
+                data-tooltip={item.tooltip}
+                key={item.label}
+                onBlur={() => setActiveSlice(null)}
+                onFocus={() => setActiveSlice(index)}
+                onMouseEnter={() => setActiveSlice(index)}
+                onMouseLeave={() => setActiveSlice(null)}
+                tabIndex={0}
+              >
                 <i style={{ background: item.color }} />
                 <span>{item.label}</span>
               </div>

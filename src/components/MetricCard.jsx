@@ -9,7 +9,7 @@ export function MetricCard({ label, value, detail, info, tone = 'default', forma
       {info ? (
         <CardHelpButton title={label} description={info} detail={detail} value={displayValue} />
       ) : null}
-      {icon ? <span className="metric-card__icon" aria-hidden="true">{icon}</span> : null}
+      {icon ? <span className={`metric-card__icon metric-card__icon--${icon}`} aria-hidden="true">{icon}</span> : null}
       <span>{label}</span>
       <strong>{displayValue}</strong>
       {detail ? <small>{detail}</small> : null}

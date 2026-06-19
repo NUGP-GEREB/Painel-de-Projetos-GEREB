@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { Fragment, useMemo, useState } from 'react'
 import { CardHelpButton } from './CardHelpButton'
 import { brl, dateShort, lifecycleStatus, percent } from '../utils/formatters'
 
@@ -326,8 +326,26 @@ function downloadXlsx(projects) {
   URL.revokeObjectURL(url)
 }
 
+function projectKey(project) {
+  return `${project.id}-${project.instrumentNumber}`
+}
+
+function projectDetails(project) {
+  return [
+    ['Objetivo geral', project.objective],
+    ['Processo', project.process],
+    ['Eixo estratégico', project.axis],
+    ['Início da vigência', dateShort.format(new Date(`${project.start}T12:00:00`))],
+    ['Fim da vigência', dateShort.format(new Date(`${project.end}T12:00:00`))],
+    ['Saldo orçamentário', brl.format(project.budgetBalance)],
+    ['Recurso a receber', brl.format(project.receivable)],
+    ['Rendimentos', brl.format(project.earnings)],
+  ]
+}
+
 export function ProjectTable({ projects }) {
   const [page, setPage] = useState(1)
+  const [expandedProject, setExpandedProject] = useState(null)
   const totalPages = Math.max(1, Math.ceil(projects.length / pageSize))
   const activePage = Math.min(page, totalPages)
 
@@ -343,7 +361,15 @@ export function ProjectTable({ projects }) {
     return Array.from({ length: end - start + 1 }, (_, index) => start + index)
   }, [activePage, totalPages])
 
-  const goToPage = (nextPage) => setPage(Math.min(Math.max(nextPage, 1), totalPages))
+  const goToPage = (nextPage) => {
+    setPage(Math.min(Math.max(nextPage, 1), totalPages))
+    setExpandedProject(null)
+  }
+
+  const toggleProject = (project) => {
+    const key = projectKey(project)
+    setExpandedProject((current) => (current === key ? null : key))
+  }
 
   return (
     <section className="panel table-panel">
@@ -385,49 +411,78 @@ export function ProjectTable({ projects }) {
               <th>TED suporte</th>
               <th>Vigência</th>
               <th>Status</th>
+              <th>Detalhes</th>
             </tr>
           </thead>
           <tbody>
             {visibleProjects.map((project) => {
               const execution = project.total ? project.realized / project.total : 0
               const status = lifecycleStatus(project)
+              const key = projectKey(project)
+              const isExpanded = expandedProject === key
 
               return (
-                <tr key={project.id}>
-                  <td className="description-cell">
-                    <span>{project.title}</span>
-                  </td>
-                  <td className="money-cell">{brl.format(project.total)}</td>
-                  <td className="money-cell">{brl.format(project.released)}</td>
-                  <td className="money-cell">{brl.format(project.realized)}</td>
-                  <td className="money-cell">{brl.format(project.committed)}</td>
-                  <td className="money-cell">{brl.format(project.currentBalance)}</td>
-                  <td>
-                    <span className="area-pill">{project.unit}</span>
-                  </td>
-                  <td>
-                    <strong>{project.coordinator}</strong>
-                    <span>{project.funder}</span>
-                  </td>
-                  <td>
-                    <strong>{project.id}</strong>
-                    <span>{project.process}</span>
-                  </td>
-                  <td>
-                    <strong>{project.instrumentType}</strong>
-                    <span>{project.instrumentNumber}</span>
-                  </td>
-                  <td>{project.nature}</td>
-                  <td>{project.supportTed ? 'Sim' : 'Não'}</td>
-                  <td>
-                    {dateShort.format(new Date(`${project.start}T12:00:00`))}
-                    <span>{dateShort.format(new Date(`${project.end}T12:00:00`))}</span>
-                  </td>
-                  <td className="sr-cell">
-                    <span className={`status status--${status.tone}`}>{status.label}</span>
-                    <small>{percent.format(execution)}</small>
-                  </td>
-                </tr>
+                <Fragment key={key}>
+                  <tr>
+                    <td className="description-cell">
+                      <span>{project.title}</span>
+                    </td>
+                    <td className="money-cell">{brl.format(project.total)}</td>
+                    <td className="money-cell">{brl.format(project.released)}</td>
+                    <td className="money-cell">{brl.format(project.realized)}</td>
+                    <td className="money-cell">{brl.format(project.committed)}</td>
+                    <td className="money-cell">{brl.format(project.currentBalance)}</td>
+                    <td>
+                      <span className="area-pill">{project.unit}</span>
+                    </td>
+                    <td>
+                      <strong>{project.coordinator}</strong>
+                      <span>{project.funder}</span>
+                    </td>
+                    <td>
+                      <strong>{project.id}</strong>
+                      <span>{project.process}</span>
+                    </td>
+                    <td>
+                      <strong>{project.instrumentType}</strong>
+                      <span>{project.instrumentNumber}</span>
+                    </td>
+                    <td>{project.nature}</td>
+                    <td>{project.supportTed ? 'Sim' : 'Não'}</td>
+                    <td>
+                      {dateShort.format(new Date(project.start + 'T12:00:00'))}
+                      <span>{dateShort.format(new Date(project.end + 'T12:00:00'))}</span>
+                    </td>
+                    <td className="sr-cell">
+                      <span className={'status status--' + status.tone}>{status.label}</span>
+                      <small>{percent.format(execution)}</small>
+                    </td>
+                    <td>
+                      <button
+                        className="details-button"
+                        type="button"
+                        onClick={() => toggleProject(project)}
+                        aria-expanded={isExpanded}
+                      >
+                        {isExpanded ? 'Ocultar' : 'Ver mais'}
+                      </button>
+                    </td>
+                  </tr>
+                  {isExpanded ? (
+                    <tr className="project-detail-row">
+                      <td colSpan={15}>
+                        <div className="project-detail-grid">
+                          {projectDetails(project).map(([label, value]) => (
+                            <div className="project-detail-block" key={key + '-' + label}>
+                              <span>{label}</span>
+                              <strong>{value}</strong>
+                            </div>
+                          ))}
+                        </div>
+                      </td>
+                    </tr>
+                  ) : null}
+                </Fragment>
               )
             })}
           </tbody>
@@ -437,12 +492,14 @@ export function ProjectTable({ projects }) {
         {visibleProjects.map((project) => {
           const execution = project.total ? project.realized / project.total : 0
           const status = lifecycleStatus(project)
+          const key = projectKey(project)
+          const isExpanded = expandedProject === key
 
           return (
-            <article className="project-card" key={`${project.id}-card`}>
+            <article className="project-card" key={project.id + '-card'}>
               <div className="project-card__heading">
                 <strong>{project.id}</strong>
-                <span className={`status status--${status.tone}`}>{status.label}</span>
+                <span className={'status status--' + status.tone}>{status.label}</span>
               </div>
               <h3>{project.title}</h3>
               <dl>
@@ -459,22 +516,40 @@ export function ProjectTable({ projects }) {
                   <dd>{brl.format(project.currentBalance)}</dd>
                 </div>
                 <div>
-                  <dt>Execu??o</dt>
+                  <dt>Execução</dt>
                   <dd>{percent.format(execution)}</dd>
                 </div>
               </dl>
               <p>{project.coordinator}</p>
               <small>{project.funder}</small>
+              <button
+                className="details-button project-card__button"
+                type="button"
+                onClick={() => toggleProject(project)}
+                aria-expanded={isExpanded}
+              >
+                {isExpanded ? 'Ocultar' : 'Ver mais'}
+              </button>
+              {isExpanded ? (
+                <div className="project-card__details">
+                  {projectDetails(project).map(([label, value]) => (
+                    <div key={key + '-card-' + label}>
+                      <span>{label}</span>
+                      <strong>{value}</strong>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
             </article>
           )
         })}
       </div>
       <div className="pager" aria-label="Paginação da tabela">
         <button type="button" onClick={() => goToPage(1)} disabled={activePage === 1}>
-          First
+          {'Primeira'}
         </button>
         <button type="button" onClick={() => goToPage(activePage - 1)} disabled={activePage === 1}>
-          Prev
+          {'Anterior'}
         </button>
         {pageNumbers.map((pageNumber) => (
           <button
@@ -487,10 +562,10 @@ export function ProjectTable({ projects }) {
           </button>
         ))}
         <button type="button" onClick={() => goToPage(activePage + 1)} disabled={activePage === totalPages}>
-          Next
+          {'Próxima'}
         </button>
         <button type="button" onClick={() => goToPage(totalPages)} disabled={activePage === totalPages}>
-          Last
+          {'Última'}
         </button>
         <span className="pager-summary">
           {projects.length ? (activePage - 1) * pageSize + 1 : 0}-{Math.min(activePage * pageSize, projects.length)} de{' '}

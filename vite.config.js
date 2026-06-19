@@ -9,8 +9,5 @@ export default defineConfig({
     sourcemap: false,
     outDir: 'dist',
     assetsDir: 'assets',
-    rollupOptions: {
-      input: new URL('./src/index.html', import.meta.url).pathname,
-    },
   },
 })

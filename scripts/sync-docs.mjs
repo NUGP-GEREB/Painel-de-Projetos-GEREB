@@ -7,7 +7,7 @@ const distDir = join(root, 'dist')
 
 await rm(docsDir, { recursive: true, force: true })
 await mkdir(docsDir, { recursive: true })
-await cp(join(distDir, 'src', 'index.html'), join(docsDir, 'index.html'))
+await cp(join(distDir, 'index.html'), join(docsDir, 'index.html'))
 await cp(join(distDir, 'assets'), join(docsDir, 'assets'), { recursive: true })
 
 const htmlPath = join(docsDir, 'index.html')

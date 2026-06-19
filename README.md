@@ -7,10 +7,12 @@ https://nugp-gereb.github.io/Painel-de-Projetos-GEREB/
 
 ## Organização
 
+- `index.html`: entrada do app usada pelo Vite em desenvolvimento e build.
 - `src/data/projects.js`: base estruturada dos projetos.
 - `src/components`: componentes reutilizáveis de métricas, gráficos e tabela.
 - `src/utils/formatters.js`: formatação monetária, percentuais, agrupamentos e status de vigência.
 - `src/styles/dashboard.css`: layout visual do painel.
+- `docs/`: versão gerada para publicação no GitHub Pages.
 
 ## Comandos
 

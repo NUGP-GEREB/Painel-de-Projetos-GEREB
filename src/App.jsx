@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import { BarList } from "./components/BarList";
-import { CardHelpButton } from "./components/CardHelpButton";
 import { ColumnChart } from "./components/ColumnChart";
 import { DonutChart } from "./components/DonutChart";
 import { MetricCard } from "./components/MetricCard";
@@ -10,7 +9,6 @@ import fiocruzLogo from "./assets/marca-300x200_1.jpg";
 import { projects } from "./data/projects";
 import {
   brl,
-  compactBrl,
   groupBySum,
   percent,
   sumBy,
@@ -18,6 +16,7 @@ import {
 import "./styles/dashboard.css";
 
 const allOption = "Todos";
+const monitoredProjectCount = 127;
 const supportOptions = [allOption, "Sim", "Não"];
 
 const optionList = (values) => [
@@ -374,17 +373,26 @@ function App() {
         balance: sumBy(filteredProjects, "currentBalance"),
         supportTedCount,
         closed,
+        active: filteredProjects.length - closed,
+        expiring: filteredProjects.filter((project) => {
+          const end = new Date(`${project.end}T12:00:00`);
+          const days = Math.ceil((end.getTime() - today.getTime()) / 86400000);
+          return days >= 0 && days <= 180;
+        }).length,
+        negativeBalance: filteredProjects.filter(
+          (project) => Number(project.currentBalance || 0) < 0,
+        ).length,
       };
     },
     [filteredProjects],
   );
 
-  const executionRate = totals.total ? totals.realized / totals.total : 0;
-  const releasedRate = totals.total ? totals.released / totals.total : 0;
-  const availableCash = totals.released - totals.realized - totals.committed;
   const activeFilterCount = Object.values(filters).filter(
     (value) => value && value !== allOption,
   ).length;
+  const projectCountLabel = activeFilterCount
+    ? `${filteredProjects.length} projetos`
+    : `${monitoredProjectCount} projetos`;
 
   const topRealizedProjects = realizedProjectRanking;
 
@@ -415,67 +423,72 @@ function App() {
 
   const coordinationGroups = coordinationFinancialGroups;
 
-  const balanceRanking = [...filteredProjects]
-    .sort((a, b) => b.currentBalance - a.currentBalance)
-    .slice(0, 5);
+  const selectedProject = useMemo(
+    () =>
+      filters.project === allOption
+        ? null
+        : projects.find((project) => project.id === filters.project),
+    [filters.project],
+  );
 
-  const portfolioStats = [
+  const dashboardCards = [
     {
-      label: "Projetos filtrados",
-      value: totals.projects,
-      detail: "projetos ativos",
+      label: "Projetos Filtrados",
+      value: monitoredProjectCount,
+      tone: "neutral",
+      icon: "grid",
       info: "Linhas da planilha que entram no recorte atual.",
     },
-
     {
-      label: "TED de suporte",
+      label: "TED de Suporte",
       value: totals.supportTedCount,
-      subtitle: "instrumentos",
-      detail: `${percent.format(totals.projects ? totals.supportTedCount / totals.projects : 0)} da seleção`,
+      tone: "blue",
+      icon: "trend",
       info: "Projetos marcados como Sim em TED de Suporte.",
     },
-  ];
-
-  const heroMetrics = [
     {
-      label: "Recurso liberado",
-      value: totals.released,
-      info: "Total que já foi disponibilizado para os projetos.",
-      detail: `${percent.format(releasedRate)} do contratado`,
+      label: "Valor Total dos Instrumentos",
+      value: "R$ 1.465.211.460,06",
       tone: "green",
+      icon: "money",
+      info: "Soma da coluna Valor Total Instrumento Contratual.",
     },
     {
-      label: "Recurso a receber",
-      value: totals.receivable,
-      info: "Valor previsto que ainda não foi liberado.",
-      detail: "previsão de entrada",
-      tone: "amber",
+      label: "Recurso Liberado",
+      value: "R$ 639.179.572,37",
+      tone: "teal",
+      icon: "down",
+      info: "Total que ja foi disponibilizado para os projetos.",
     },
     {
-      label: "Total realizado",
-      value: totals.realized,
+      label: "Recurso a Receber",
+      value: "R$ 863.684.583,50",
+      tone: "indigo",
+      icon: "up",
+      info: "Valor previsto que ainda nao foi liberado.",
+    },
+    {
+      label: "Total Realizado",
+      value: "R$ 667.327.428,72",
+      tone: "cyan",
+      icon: "wallet",
       info: "Soma executada ou gasta pelos projetos.",
-      detail: `${percent.format(executionRate)} executado`,
-      tone: "blue",
     },
     {
-      label: "Total comprometido",
-      value: totals.committed,
-      info: "Compromissos registrados, ainda não necessariamente pagos.",
-      detail: "em execução",
+      label: "Total Comprometido",
+      value: "R$ 138.499.218,72",
       tone: "violet",
+      icon: "piggy",
+      info: "Compromissos registrados, ainda nao necessariamente pagos.",
     },
     {
-      label: "Saldo total atual",
-      value: totals.balance,
+      label: "Saldo Total Atual",
+      value: "R$ 122.339.433,51",
+      tone: "rose",
+      icon: "arrow",
       info: "Saldo financeiro atual informado na base.",
-      detail: "disponível",
-      tone: totals.balance < 0 ? "red" : "green",
     },
   ];
-
-  const releasedWidth = `${Math.min(Math.max(releasedRate, 0), 1) * 100}%`;
-  const showLegacySummary = false;
 
   const resetFilters = () =>
     setFilters({
@@ -492,147 +505,21 @@ function App() {
 
   return (
     <main className="finance-dashboard">
-      <section className="hero-dashboard" aria-label="Resumo do Painel de Projetos GEREB">
-        <header className="hero-header">
-          <div className="brandline">
-            <img className="brand-logo" src={fiocruzLogo} alt="Fiocruz Fundação Oswaldo Cruz" />
-            <div className="brand-copy">
-              <span className="brand-eyebrow">Fiocruz Brasília</span>
-              <h1>Painel de Projetos GEREB</h1>
-            </div>
+      <section className="page-header" aria-label="Cabeçalho do Painel de Projetos GEREB">
+        <div className="page-header__main">
+          <div className="page-brand">
+            <img src={fiocruzLogo} alt="Fiocruz Brasília" />
           </div>
-          <p className="status-pill">Situação em junho/2026</p>
-        </header>
-
-        <section className="hero-overview" aria-label="Resumo executivo da carteira">
-          <article className="hero-total-card">
-            <span className="hero-section-label">Carteira contratual monitorada</span>
-            <strong>{compactBrl.format(totals.total)}</strong>
-            <p>{brl.format(totals.total)} em instrumentos acompanhados pela GEREB.</p>
-
-            <div className="hero-total-stats">
-              {portfolioStats.map((stat) => (
-                <article className="portfolio-stat" key={stat.label}>
-                  <CardHelpButton
-                    title={stat.label}
-                    description={stat.info}
-                    detail={stat.detail}
-                    value={stat.value}
-                  />
-                  <span>{stat.label}</span>
-                  <strong>{stat.value}</strong>
-                  <small>{stat.subtitle || stat.detail}</small>
-                </article>
-              ))}
-            </div>
-
-            <div className="hero-progress" aria-hidden="true">
-              <span style={{ width: releasedWidth }} />
-            </div>
-            <div className="hero-progress-meta">
-              <span>{percent.format(releasedRate)} liberado</span>
-              <span>{percent.format(executionRate)} realizado</span>
-            </div>
-          </article>
-
-          <div className="hero-metrics">
-            {heroMetrics.map((metric) => (
-              <MetricCard
-                key={metric.label}
-                label={metric.label}
-                value={metric.value}
-                info={metric.info}
-                detail={metric.detail}
-                tone={metric.tone}
-              />
-            ))}
-          </div>
-        </section>
-      <header className="topbar">
-        <div className="brandline">
-          <img className="brand-logo" src={fiocruzLogo} alt="Fiocruz Fundação Oswaldo Cruz" />
-          <div className="brand-copy">
-            <span className="brand-eyebrow">Fiocruz Brasilia</span>
+          <div className="page-title-block">
+            <span>Fiocruz Brasília</span>
             <h1>Painel de Projetos GEREB</h1>
-            <p>Situação em Junho 26</p>
+            <p>Gerência de Engenharia e Reforma de Edificações</p>
+          </div>
+          <div className="page-status" aria-label="Atualização do painel">
+            <span>Situação em junho/2026</span>
+            <strong>{dashboardCards[0].value} projetos monitorados</strong>
           </div>
         </div>
-
-      </header>
-
-        <section className="summary-board" aria-label="Resumo da carteira">
-          <div className="portfolio-band">
-            {portfolioStats.map((stat) => (
-            <article
-              className={stat.tone ? `portfolio-stat portfolio-stat--${stat.tone}` : "portfolio-stat"}
-              key={stat.label}
-            >
-              <CardHelpButton
-                title={stat.label}
-                description={stat.info}
-                detail={stat.detail}
-                value={stat.value}
-              />
-              {stat.icon ? <span className="metric-card__icon" aria-hidden="true">{stat.icon}</span> : null}
-              <span>{stat.label}</span>
-              <strong>{stat.value}</strong>
-              <small>{stat.subtitle || stat.detail}</small>
-            </article>
-            ))}
-          </div>
-
-          <div className="kpi-row kpi-row--financial">
-          <MetricCard
-            label="Valor total dos instrumentos"
-            value="R$ 1,465 bi"
-            info="Soma da coluna Valor Total Instrumento Contratual."
-            detail="100% do portfÃ³lio"
-            tone="green"
-            icon="↗"
-          />
-
-          <MetricCard
-            label="Recurso liberado"
-            value="R$ 639,2 mi"
-            info="Total que jÃ¡ foi disponibilizado para os projetos."
-            detail={`${percent.format(releasedRate)} do total`}
-            tone="green"
-            icon="↓"
-          />
-          <MetricCard
-            label="Recurso a receber"
-            value="R$ 863,7 mi"
-            info="Valor previsto que ainda nÃ£o foi liberado."
-            detail="58,9% do total"
-            tone="amber"
-            icon="↑"
-          />
-          <MetricCard
-            label="Total realizado"
-            value="R$ 667,3 mi"
-            info="Soma executada ou gasta pelos projetos."
-            detail="executado"
-            tone="green"
-            icon="✓"
-          />
-          <MetricCard
-            label="Total comprometido"
-            value="R$ 138,5 mi"
-            info="Compromissos registrados, ainda nÃ£o necessariamente pagos."
-            detail="em execuÃ§Ã£o"
-            tone="violet"
-            icon="◷"
-          />
-          <MetricCard
-            label="Saldo total atual"
-            value="R$ 122,3 mi"
-            info="Saldo financeiro atual informado na base."
-            detail="disponÃ­vel"
-            tone="red"
-            icon="▣"
-          />
-          </div>
-        </section>
       </section>
 
       <section className="filter-shell" aria-label="Filtros da base GEREB">
@@ -722,74 +609,19 @@ function App() {
         </div>
       </section>
 
-      {showLegacySummary && (
-      <section className="summary-board" aria-label="Resumo da carteira">
-        <div className="portfolio-band">
-          {portfolioStats.map((stat) => (
-          <article
-            className={stat.tone ? `portfolio-stat portfolio-stat--${stat.tone}` : "portfolio-stat"}
-            key={stat.label}
-          >
-            <CardHelpButton
-              title={stat.label}
-              description={stat.info}
-              detail={stat.detail}
-              value={stat.value}
-            />
-            <span>{stat.label}</span>
-            <strong>{stat.value}</strong>
-          </article>
-          ))}
-        </div>
-
-        <div className="kpi-row kpi-row--financial">
-        <MetricCard
-          label="Valor total dos instrumentos"
-          value= "R$ 1.465.211.460,06"
-          info="Soma da coluna Valor Total Instrumento Contratual."
-          detail="Soma contratual"
-          tone="blue"
-        />
-
-        <MetricCard
-          label="Recurso liberado"
-          value=" R$ 639.179.572,37"
-          info="Total que já foi disponibilizado para os projetos."
-          detail={`${percent.format(releasedRate)} do contratado`}
-          tone="green"
-        />
-        <MetricCard
-          label="Recurso a receber"
-          value="R$ 863.684.583,50"
-          info="Valor previsto que ainda não foi liberado."
-          detail="Previsão ainda não liberada"
-          tone="amber"
-        />
-        <MetricCard
-          label="Total realizado"
-          value="R$ 667.327.428,72"
-          info="Soma executada ou gasta pelos projetos."
-          detail={`${percent.format(executionRate)} executado`}
-          tone="violet"
-        />
-        <MetricCard
-          label="Total comprometido"
-          value="R$ 138.499.218,72"
-          info="Compromissos registrados, ainda não necessariamente pagos."
-          detail="Compromissos registrados"
-          tone="red"
-        />
-        <MetricCard
-          label="Saldo total atual"
-          value="R$ 122.339.433,51"
-          info="Saldo financeiro atual informado na base."
-          detail={`${brl.format(availableCash)} caixa livre`}
-          tone={totals.balance < 0 ? "red" : "green"}
-        />
-        </div>
+      <section className="dashboard-summary" aria-label="Resumo da carteira">
+        {dashboardCards.map((card) => (
+          <MetricCard
+            key={card.label}
+            label={card.label}
+            value={card.value}
+            info={card.info}
+            tone={card.tone}
+            icon={card.icon}
+            format="text"
+          />
+        ))}
       </section>
-      )}
-
       <section className="dashboard-grid">
         <ResourceDistribution />
         <DonutChart
@@ -875,19 +707,59 @@ function App() {
 
       <ProjectTable projects={filteredProjects} />
 
-      <section className="ranking-strip">
-        <h2>
-          Ranking de projetos com maior saldo disponível
-          <span>(Saldo total atual)</span>
-        </h2>
-        <div>
-          {balanceRanking.map((project, index) => (
-            <article key={project.id}>
-              <strong>{index + 1}</strong>
-              <span>{project.id}</span>
-              <b>{brl.format(project.currentBalance)}</b>
-            </article>
-          ))}
+      <section className="project-consultation" aria-label="Consulta de projetos">
+        <div className="project-consultation__heading">
+          <div>
+            <h2>Consulta de Projetos</h2>
+            <p>Selecione um projeto para aplicar o recorte no painel.</p>
+          </div>
+          <strong>
+            {selectedProject ? selectedProject.id : projectCountLabel}
+          </strong>
+        </div>
+        <div className="project-consultation__controls">
+          <label className="project-consultation__field">
+            <span>Projeto</span>
+            <select
+              value={filters.project}
+              onChange={(event) => updateFilter("project", event.target.value)}
+            >
+              {projectOptions.map((option) => (
+                <option key={option}>{option}</option>
+              ))}
+            </select>
+          </label>
+          <button
+            type="button"
+            onClick={() => updateFilter("project", allOption)}
+            disabled={filters.project === allOption}
+          >
+            Limpar consulta
+          </button>
+        </div>
+        <div className="project-consultation__result">
+          <article>
+            <span>{selectedProject ? "Projeto selecionado" : "Recorte atual"}</span>
+            <strong>{selectedProject ? selectedProject.title : "Todos os projetos"}</strong>
+          </article>
+          <div className="project-consultation__facts">
+            <div>
+              <span>Coordenação</span>
+              <strong>{selectedProject ? selectedProject.unit : projectCountLabel}</strong>
+            </div>
+            <div>
+              <span>Valor total</span>
+              <strong>{brl.format(selectedProject ? selectedProject.total : totals.total)}</strong>
+            </div>
+            <div>
+              <span>Realizado</span>
+              <strong>{brl.format(selectedProject ? selectedProject.realized : totals.realized)}</strong>
+            </div>
+            <div>
+              <span>Saldo atual</span>
+              <strong>{brl.format(selectedProject ? selectedProject.currentBalance : totals.balance)}</strong>
+            </div>
+          </div>
         </div>
       </section>
     </main>
