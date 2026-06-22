@@ -1529,11 +1529,14 @@
 .axis-overview {
   display: grid;
   gap: 34px;
-  max-width: 820px;
-  margin: 0 auto;
+  width: 100%;
+  max-width: none;
+  min-height: 625px;
+  margin: 0;
   border: 0;
-  padding: 6px 8px 0;
+  padding: 8px 14px 0;
   background: #fff;
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
   box-shadow: none;
 }
 
@@ -1546,7 +1549,7 @@
   color: #008d83;
   font-size: 12px;
   font-weight: 800;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.2em;
   line-height: 1;
   text-transform: uppercase;
 }
@@ -1575,7 +1578,7 @@
 
 .axis-overview__rows {
   display: grid;
-  gap: 30px;
+  gap: 31px;
 }
 
 .axis-overview__row {
@@ -1585,8 +1588,8 @@
 
 .axis-overview__row-top {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) max-content;
-  gap: 22px;
+  grid-template-columns: minmax(0, 1fr) minmax(238px, max-content);
+  gap: 26px;
   align-items: start;
 }
 
@@ -1607,6 +1610,7 @@
 
 .axis-overview__label span {
   display: -webkit-box;
+  width: min(640px, 100%);
   overflow: hidden;
   color: #1d3557;
   font-size: 14px;
@@ -1618,7 +1622,7 @@
 
 .axis-overview__value {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   align-items: baseline;
   justify-content: flex-end;
   white-space: nowrap;
@@ -1661,7 +1665,7 @@
 }
 
 .axis-overview__source {
-  margin-top: 18px;
+  margin-top: auto;
   color: #c0cadb;
   font-size: 13px;
   font-weight: 500;
@@ -1670,6 +1674,7 @@
 @media (max-width: 720px) {
   .axis-overview {
     gap: 24px;
+    min-height: 0;
     padding: 4px 0 0;
   }
 
