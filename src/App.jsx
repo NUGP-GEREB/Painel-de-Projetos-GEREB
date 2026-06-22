@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { AxisOverview } from "./components/AxisOverview";
 import { BarList } from "./components/BarList";
 import { ColumnChart } from "./components/ColumnChart";
 import { DonutChart } from "./components/DonutChart";
@@ -597,15 +598,12 @@ function App() {
       </section>
 
       <section className="dashboard-grid dashboard-grid--support dashboard-grid--single">
-        <BarList
+        <AxisOverview
           title="Eixo Mapa Estratégico Fiocruz"
           subtitle="Valor total contratado por eixo"
           info="Organiza o valor contratado pelos eixos estratégicos informados na planilha, ajudando a ver quais temas concentram mais recursos."
           items={axisItems}
           limit={6}
-          fullValues
-          presentation
-          roomyLabels
         />
       </section>
 
