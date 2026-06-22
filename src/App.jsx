@@ -600,8 +600,6 @@ function App() {
       <section className="dashboard-grid dashboard-grid--support dashboard-grid--single">
         <AxisOverview
           title="Eixo Mapa Estratégico Fiocruz"
-          subtitle="Valor total contratado por eixo"
-          info="Organiza o valor contratado pelos eixos estratégicos informados na planilha, ajudando a ver quais temas concentram mais recursos."
           items={axisItems}
           limit={6}
         />
