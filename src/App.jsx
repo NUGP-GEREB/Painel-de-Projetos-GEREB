@@ -604,6 +604,7 @@ function App() {
           items={axisItems}
           limit={6}
           fullValues
+          presentation
           roomyLabels
         />
       </section>

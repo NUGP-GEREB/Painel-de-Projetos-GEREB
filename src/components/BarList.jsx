@@ -18,6 +18,7 @@ export function BarList({
   info,
   expandable = false,
   fullValues = false,
+  presentation = false,
   roomyLabels = false,
   wideLabels = false,
 }) {
@@ -31,7 +32,7 @@ export function BarList({
   }
 
   return (
-    <section className="panel chart-panel">
+    <section className={['panel', 'chart-panel', presentation ? 'chart-panel--presentation' : ''].filter(Boolean).join(' ')}>
       <CardHelpButton
         title={title}
         description={info || 'Gráfico de barras usado para comparar rapidamente os maiores itens do recorte selecionado.'}
@@ -50,11 +51,12 @@ export function BarList({
           </button>
         ) : null}
       </div>
-      <div className="ranking-chart">
+      <div className={['ranking-chart', presentation ? 'ranking-chart--presentation' : ''].filter(Boolean).join(' ')}>
         {visible.map((item) => (
           <div
             className={[
               'ranking-row',
+              presentation ? 'ranking-row--presentation' : '',
               wideLabels ? 'ranking-row--wide-label' : '',
               roomyLabels ? 'ranking-row--roomy-label' : '',
               fullValues ? 'ranking-row--full-value' : '',
