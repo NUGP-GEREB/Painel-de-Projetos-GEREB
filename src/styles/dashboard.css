@@ -1557,7 +1557,7 @@
 }
 
 .donut-layout--detail {
-  grid-template-columns: minmax(170px, 230px) minmax(360px, 1fr);
+  grid-template-columns: minmax(170px, 230px) minmax(410px, 1fr);
   grid-template-rows: auto;
   gap: 20px;
   min-height: 190px;
@@ -1708,8 +1708,8 @@
 
 .donut-detail__row {
   display: grid;
-  grid-template-columns: 14px minmax(0, 1fr) minmax(136px, 148px);
-  gap: 10px;
+  grid-template-columns: 14px minmax(0, 1fr) minmax(176px, 192px);
+  gap: 12px;
   align-items: center;
   border-bottom: 1px solid rgba(189, 207, 213, 0.55);
   padding: 9px 0;
@@ -1742,9 +1742,9 @@
 
 .donut-detail__values {
   display: grid;
-  grid-template-columns: minmax(72px, 1fr) 38px;
-  gap: 4px 7px;
-  width: min(148px, 100%);
+  grid-template-columns: minmax(112px, 1fr) 46px;
+  gap: 4px 8px;
+  width: min(192px, 100%);
   justify-self: end;
   justify-items: end;
   align-items: center;
@@ -1755,8 +1755,8 @@
   display: block;
   grid-column: 1 / -1;
   color: var(--blue-dark);
-  font-size: 10px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 700;
   line-height: 1.2;
   text-align: right;
   white-space: nowrap;
@@ -1766,8 +1766,8 @@
   display: block;
   grid-column: 1;
   color: var(--detail);
-  font-size: 9px;
-  font-weight: 500;
+  font-size: 11px;
+  font-weight: 600;
   line-height: 1.2;
   text-align: right;
   white-space: nowrap;
@@ -1776,10 +1776,10 @@
 .donut-detail__values b {
   grid-column: 2;
   border-radius: 999px;
-  padding: 2px 5px;
+  padding: 3px 6px;
   color: var(--blue-dark);
   background: var(--surface);
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 600;
   line-height: 1;
   white-space: nowrap;
@@ -1930,7 +1930,7 @@
 
 .resource-detail__row {
   display: grid;
-  grid-template-columns: 14px minmax(170px, 1fr) minmax(170px, max-content);
+  grid-template-columns: 14px minmax(170px, 1fr) minmax(200px, max-content);
   gap: 18px;
   align-items: center;
   min-height: 58px;
@@ -1969,16 +1969,16 @@
   justify-items: end;
   gap: 5px;
   color: var(--blue-dark);
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 700;
   line-height: 1.2;
   white-space: nowrap;
 }
 
 .resource-detail__row small {
   color: var(--detail);
-  font-size: 11px;
-  font-weight: 500;
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .chart-panel--wide {

@@ -12,6 +12,9 @@ await cp(join(distDir, 'assets'), join(docsDir, 'assets'), { recursive: true })
 
 const htmlPath = join(docsDir, 'index.html')
 const html = await readFile(htmlPath, 'utf8')
-const docsHtml = html.replaceAll('../assets/', './assets/')
+const docsHtml = html
+  .replaceAll('../assets/', './assets/')
+  .replace(/\r\n/g, '\n')
+  .replace(/\r/g, '\n')
 await writeFile(htmlPath, docsHtml)
 await writeFile(join(root, 'index.html'), docsHtml.replaceAll('./assets/', './docs/assets/'))
