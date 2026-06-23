@@ -4,10 +4,11 @@ import { BarList } from "./components/BarList";
 import { ColumnChart } from "./components/ColumnChart";
 import { DonutChart } from "./components/DonutChart";
 import { MetricCard } from "./components/MetricCard";
+import { ProjectManager } from "./components/ProjectManager";
 import { ProjectTable } from "./components/ProjectTable";
 import { ResourceDistribution } from "./components/ResourceDistribution";
 import fiocruzLogo from "./assets/marca-300x200_1.jpg";
-import { projects } from "./data/projects";
+import { csvProjects, normalizeProjects } from "./data/projectCsv";
 import {
   brl,
   groupBySum,
@@ -18,7 +19,9 @@ import "./styles/dashboard.css";
 
 const allOption = "Todos";
 const supportOptions = [allOption, "Sim", "Não"];
-const ministryOfHealth = "MINIST\u00c9RIO DA SA\u00daDE";
+const ministryOfHealth = "MINISTÉRIO DA SAÚDE";
+const storageKey = "gereb-projects-editable-v3";
+const oldStorageKeys = ["gereb-projects-editable-v1", "gereb-projects-editable-v2"];
 const fullBrl = new Intl.NumberFormat("pt-BR", {
   style: "currency",
   currency: "BRL",
@@ -176,18 +179,18 @@ function groupTedResources(items) {
   ];
 }
 
-const projectOptions = [allOption, ...projects.map((project) => project.id)];
-const modalityOptions = optionList(
-  projects.map((project) => normalizeInstrumentType(project.instrumentType)),
-);
-const funderOptions = optionList(projects.map((project) => project.funder));
-const natureOptions = optionList(projects.map((project) => project.nature));
-const axisOptions = optionList(projects.map((project) => project.axis));
-const instrumentOptions = optionList(
-  projects.map((project) => project.instrumentNumber),
-);
+function loadProjects() {
+  try {
+    const saved = window.localStorage.getItem(storageKey);
+    return saved ? normalizeProjects(JSON.parse(saved)) : csvProjects;
+  } catch {
+    return csvProjects;
+  }
+}
 
 function App() {
+  const [projects, setProjects] = useState(loadProjects);
+  const [managerOpen, setManagerOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [filters, setFilters] = useState({
     project: allOption,
@@ -203,6 +206,46 @@ function App() {
 
   const updateFilter = (key, value) =>
     setFilters((current) => ({ ...current, [key]: value }));
+
+  const updateProjects = (nextProjects) => {
+    const normalized = normalizeProjects(nextProjects);
+    setProjects(normalized);
+    window.localStorage.setItem(storageKey, JSON.stringify(normalized));
+  };
+
+  const resetProjects = () => {
+    setProjects(csvProjects);
+    window.localStorage.removeItem(storageKey);
+    oldStorageKeys.forEach((key) => window.localStorage.removeItem(key));
+  };
+
+  const projectOptions = useMemo(
+    () => [allOption, ...projects.map((project) => project.id)],
+    [projects],
+  );
+  const modalityOptions = useMemo(
+    () =>
+      optionList(
+        projects.map((project) => normalizeInstrumentType(project.instrumentType)),
+      ),
+    [projects],
+  );
+  const funderOptions = useMemo(
+    () => optionList(projects.map((project) => project.funder)),
+    [projects],
+  );
+  const natureOptions = useMemo(
+    () => optionList(projects.map((project) => project.nature)),
+    [projects],
+  );
+  const axisOptions = useMemo(
+    () => optionList(projects.map((project) => project.axis)),
+    [projects],
+  );
+  const instrumentOptions = useMemo(
+    () => optionList(projects.map((project) => project.instrumentNumber)),
+    [projects],
+  );
 
   const filteredProjects = useMemo(
     () =>
@@ -239,7 +282,7 @@ function App() {
           matchesEnd
         );
       }),
-    [filters],
+    [filters, projects],
   );
 
   const totals = useMemo(
@@ -410,6 +453,17 @@ function App() {
       start: "",
       end: "",
     });
+
+  if (managerOpen) {
+    return (
+      <ProjectManager
+        projects={projects}
+        onChange={updateProjects}
+        onBack={() => setManagerOpen(false)}
+        onReset={resetProjects}
+      />
+    );
+  }
 
   return (
     <main className="finance-dashboard">

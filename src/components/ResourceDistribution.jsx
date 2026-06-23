@@ -46,16 +46,16 @@ export function ResourceDistribution({ items }) {
   }, { items: [], offset: 0 }).items
 
   return (
-    <section className="panel resource-panel" aria-label="DistribuiÃ§Ã£o de Recursos - TEDs">
+    <section className="panel resource-panel" aria-label="Distribuição de Recursos - TEDs">
       <div className="panel-title">
         <div className="title-dot" />
         <div>
-          <h2>DistribuiÃ§Ã£o de Recursos - TEDs</h2>
+          <h2>Distribuição de Recursos - TEDs</h2>
         </div>
       </div>
       <div className="resource-layout">
         {slices.length ? (
-          <svg className="resource-pie" viewBox="0 0 100 100" role="img" aria-label="DistribuiÃ§Ã£o dos recursos por tipo de TED">
+          <svg className="resource-pie" viewBox="0 0 100 100" role="img" aria-label="Distribuição dos recursos por tipo de TED">
             {slices.map((item) => (
               <path d={item.path} fill={item.color} key={item.label}>
                 <title>
