@@ -1397,7 +1397,11 @@
 }
 
 .ranking-row--full-value {
-  grid-template-columns: 150px minmax(0, 1fr) minmax(132px, auto);
+  grid-template-columns: 150px minmax(0, 1fr) minmax(168px, max-content);
+}
+
+.ranking-row--wide-label.ranking-row--full-value {
+  grid-template-columns: 150px minmax(0, 1fr) minmax(168px, max-content);
 }
 
 .ranking-row--roomy-label.ranking-row--full-value {
@@ -3320,6 +3324,10 @@ tbody tr.project-detail-row:hover td {
 
   .ranking-row--roomy-label.ranking-row--full-value {
     grid-template-columns: minmax(82px, 0.95fr) minmax(90px, 1fr) minmax(68px, auto);
+  }
+
+  .ranking-row--wide-label.ranking-row--full-value {
+    grid-template-columns: minmax(82px, 0.8fr) minmax(90px, 1fr) minmax(142px, max-content);
   }
 
   .ranking-row--presentation,

@@ -737,6 +737,7 @@ function App() {
           limit={10}
           expandable
           wideLabels
+          fullValues
         />
       </section>
 
@@ -749,6 +750,7 @@ function App() {
           limit={15}
           expandable
           wideLabels
+          fullValues
         />
         <DonutChart
           title="Naturezas dos Projetos"
