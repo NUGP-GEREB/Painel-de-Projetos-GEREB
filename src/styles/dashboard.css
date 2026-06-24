@@ -2919,7 +2919,7 @@ tbody tr.project-detail-row:hover td {
 
 .project-consultation__controls {
   display: grid;
-  grid-template-columns: minmax(260px, 1fr) auto;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 12px;
   align-items: end;
   margin-bottom: 12px;
@@ -2951,6 +2951,8 @@ tbody tr.project-detail-row:hover td {
 }
 
 .project-consultation__controls button {
+  justify-self: start;
+  min-width: 132px;
   height: 36px;
   border: 1px solid var(--blue);
   border-radius: 8px;
@@ -4312,14 +4314,18 @@ tbody tr.project-detail-row:hover td {
 }
 
 .dashboard-summary .metric-card__icon::before {
-  display: block;
+  display: grid;
   width: 30px;
   height: 30px;
+  align-items: center;
   background-position: center;
   background-repeat: no-repeat;
   background-size: contain;
   color: currentColor;
   content: "";
+  justify-items: center;
+  line-height: 1;
+  text-align: center;
 }
 
 .dashboard-summary .metric-card__icon--grid {
@@ -4351,6 +4357,8 @@ tbody tr.project-detail-row:hover td {
   background: none;
   color: #00b978;
   content: "$";
+  display: grid;
+  place-items: center;
   font-size: 30px;
   font-weight: 400;
   line-height: 1;

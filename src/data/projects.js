@@ -3175,30 +3175,5 @@ export const projects = [
         "currentBalance":  90217.86,
         "earnings":  0,
         "supportTed":  false
-    },
-    {
-        "item":  128,
-        "id":  "GEREB-024-FIO-26",
-        "title":  "Redes Agroecológicas De Plantas Medicinais: Formação, Manejo Sustentável E Organização Comunitária.",
-        "objective":  "Realizar Ações De Fortalecimento Técnico E Organizativo Das Redes De Produção De Plantas Medicinais, Por Meio De Assessoria Técnica Continuada E Da Elaboração E Disseminação De Materiais Formativos E Comunicacionais Voltados Ao Manejo Agroecológico E À Gestão Comunitária Da Produção.",
-        "coordinator":  "Wagner de Jesus Martins",
-        "unit":  "COLABORATÓRIO",
-        "process":  "25027.000585/2025-57",
-        "instrumentType":  "TED",
-        "funder":  "MINISTÉRIO DO DESENVOLVIMENTO AGRÁRIO E AGRICULTURA FAMILIAR",
-        "instrumentNumber":  "970963/2024",
-        "nature":  "Pesquisa",
-        "start":  "2026-03-27",
-        "end":  "2027-09-27",
-        "axis":  "Saúde E Sustentabilidade Socioambiental",
-        "total":  2497000,
-        "budgetBalance":  701700,
-        "released":  0,
-        "receivable":  701700,
-        "realized":  0,
-        "committed":  0,
-        "currentBalance":  0,
-        "earnings":  -1795300,
-        "supportTed":  false
     }
 ]

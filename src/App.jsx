@@ -93,6 +93,24 @@ function normalizeInstrumentType(value) {
   return value || "Não informado";
 }
 
+const isTedProject = (project) =>
+  normalizeInstrumentType(project.instrumentType) === "TED";
+
+function getTedCategory(project) {
+  if (project.supportTed) return "TED de suporte";
+  if (project.funder === ministryOfHealth) return "TED MS";
+  return "TEDs outros órgãos";
+}
+
+function getTedYear(project) {
+  return (
+    String(project.instrumentNumber || "").match(/\/(\d{4})(?:\D|$)/)?.[1] ||
+    String(project.start || "").slice(0, 4)
+  );
+}
+
+const tedFilterKeys = ["tedCategory", "ted", "tedYear", "tedFunder", "tedSupport"];
+
 function groupInstrumentTypes(items) {
   const groups = new Map();
 
@@ -143,9 +161,7 @@ function groupCoordinationFinancials(items) {
 }
 
 function groupTedResources(items) {
-  const tedProjects = items.filter(
-    (project) => normalizeInstrumentType(project.instrumentType) === "TED",
-  );
+  const tedProjects = items.filter(isTedProject);
 
   return [
     {
@@ -188,12 +204,24 @@ function loadProjects() {
   }
 }
 
+const tedCategoryOptions = [
+  allOption,
+  "TED MS",
+  "TED de suporte",
+  "TEDs outros órgãos",
+];
+
 function App() {
   const [projects, setProjects] = useState(loadProjects);
   const [managerOpen, setManagerOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [filters, setFilters] = useState({
     project: allOption,
+    tedCategory: allOption,
+    ted: allOption,
+    tedYear: allOption,
+    tedFunder: allOption,
+    tedSupport: allOption,
     modality: allOption,
     funder: allOption,
     nature: allOption,
@@ -247,11 +275,66 @@ function App() {
     [projects],
   );
 
+  const allTedProjects = useMemo(
+    () => projects.filter(isTedProject),
+    [projects],
+  );
+  const tedOptions = useMemo(
+    () => optionList(allTedProjects.map((project) => project.instrumentNumber)),
+    [allTedProjects],
+  );
+  const tedYearOptions = useMemo(
+    () => optionList(allTedProjects.map(getTedYear)),
+    [allTedProjects],
+  );
+  const tedFunderOptions = useMemo(
+    () => optionList(allTedProjects.map((project) => project.funder)),
+    [allTedProjects],
+  );
+  const allTedCount = Math.max(tedOptions.length - 1, 0);
+
+  const updateTedFilter = (key, value) =>
+    setFilters((current) => ({
+      ...current,
+      project: allOption,
+      modality: allOption,
+      instrumentNumber: allOption,
+      ...(key === "tedFunder" ? { funder: allOption } : {}),
+      ...(key === "tedSupport" ? { supportTed: allOption } : {}),
+      [key]: value,
+    }));
+
+  const clearTedFilters = () =>
+    setFilters((current) => ({
+      ...current,
+      tedCategory: allOption,
+      ted: allOption,
+      tedYear: allOption,
+      tedFunder: allOption,
+      tedSupport: allOption,
+    }));
+
   const filteredProjects = useMemo(
     () =>
       projects.filter((project) => {
         const matchesProject =
           filters.project === allOption || project.id === filters.project;
+        const hasTedFilters = tedFilterKeys.some(
+          (key) => filters[key] && filters[key] !== allOption,
+        );
+        const matchesTedFilters =
+          !hasTedFilters ||
+          (isTedProject(project) &&
+            (filters.tedCategory === allOption ||
+              getTedCategory(project) === filters.tedCategory) &&
+            (filters.ted === allOption ||
+              project.instrumentNumber === filters.ted) &&
+            (filters.tedYear === allOption ||
+              getTedYear(project) === filters.tedYear) &&
+            (filters.tedFunder === allOption ||
+              project.funder === filters.tedFunder) &&
+            (filters.tedSupport === allOption ||
+              (filters.tedSupport === "Sim") === project.supportTed));
         const matchesModality =
           filters.modality === allOption ||
           normalizeInstrumentType(project.instrumentType) === filters.modality;
@@ -272,6 +355,7 @@ function App() {
 
         return (
           matchesProject &&
+          matchesTedFilters &&
           matchesModality &&
           matchesFunder &&
           matchesNature &&
@@ -327,6 +411,37 @@ function App() {
   const projectCountLabel = activeFilterCount
     ? `${filteredProjects.length} projetos no recorte`
     : `${projects.length} projetos monitorados`;
+  const activeTedFilterCount = tedFilterKeys.filter(
+    (key) => filters[key] && filters[key] !== allOption,
+  ).length;
+
+  const tedProjectsInScope = useMemo(
+    () => filteredProjects.filter(isTedProject),
+    [filteredProjects],
+  );
+
+  const tedTotals = useMemo(
+    () => ({
+      tedCount: new Set(
+        tedProjectsInScope
+          .map((project) => project.instrumentNumber)
+          .filter(Boolean),
+      ).size,
+      projects: tedProjectsInScope.length,
+      total: sumBy(tedProjectsInScope, "total"),
+      realized: sumBy(tedProjectsInScope, "realized"),
+      balance: sumBy(tedProjectsInScope, "currentBalance"),
+    }),
+    [tedProjectsInScope],
+  );
+
+  const selectedTed = filters.ted !== allOption;
+  const hasTedFilter = activeTedFilterCount > 0;
+  const tedCountLabel = selectedTed
+    ? `TED ${filters.ted}`
+    : activeFilterCount
+      ? `${tedTotals.tedCount} TEDs no recorte`
+      : `${allTedCount} TEDs monitorados`;
 
   const topRealizedProjects = useMemo(
     () =>
@@ -367,14 +482,6 @@ function App() {
   const coordinationGroups = useMemo(
     () => groupCoordinationFinancials(filteredProjects),
     [filteredProjects],
-  );
-
-  const selectedProject = useMemo(
-    () =>
-      filters.project === allOption
-        ? null
-        : filteredProjects.find((project) => project.id === filters.project),
-    [filteredProjects, filters.project],
   );
 
   const resourceItems = useMemo(
@@ -444,6 +551,11 @@ function App() {
   const resetFilters = () =>
     setFilters({
       project: allOption,
+      tedCategory: allOption,
+      ted: allOption,
+      tedYear: allOption,
+      tedFunder: allOption,
+      tedSupport: allOption,
       modality: allOption,
       funder: allOption,
       nature: allOption,
@@ -475,7 +587,6 @@ function App() {
           <div className="page-title-block">
             <span>Fiocruz Brasília</span>
             <h1>Painel de Projetos GEREB</h1>
-            <p>Gerência de Engenharia e Reforma de Edificações</p>
           </div>
           <div className="page-status" aria-label="Atualização do painel">
             <span>Situação em junho/2026</span>
@@ -635,7 +746,7 @@ function App() {
           subtitle="Valor total contratado por financiador"
           info="Mostra quais entes financiadores concentram o maior valor contratado na carteira filtrada."
           items={funderItems}
-          limit={8}
+          limit={15}
           expandable
           wideLabels
         />
@@ -661,57 +772,110 @@ function App() {
 
       <ProjectTable key={filterKey} projects={filteredProjects} />
 
-      <section className="project-consultation" aria-label="Consulta de projetos">
+      <section className="project-consultation" aria-label="Consulta de TEDs">
         <div className="project-consultation__heading">
           <div>
-            <h2>Consulta de Projetos</h2>
-            <p>Gerência de Engenharia e Reforma de Edificações</p>
+            <h2>Consulta de TEDs</h2>
           </div>
           <strong>
-            {selectedProject ? selectedProject.id : projectCountLabel}
+            {tedCountLabel}
           </strong>
         </div>
         <div className="project-consultation__controls">
           <label className="project-consultation__field">
-            <span>Projeto</span>
+            <span>Categoria TED</span>
             <select
-              value={filters.project}
-              onChange={(event) => updateFilter("project", event.target.value)}
+              value={filters.tedCategory}
+              onChange={(event) => updateTedFilter("tedCategory", event.target.value)}
             >
-              {projectOptions.map((option) => (
+              {tedCategoryOptions.map((option) => (
+                <option key={option}>{option}</option>
+              ))}
+            </select>
+          </label>
+          <label className="project-consultation__field">
+            <span>Nº do TED</span>
+            <select
+              value={filters.ted}
+              onChange={(event) => updateTedFilter("ted", event.target.value)}
+            >
+              {tedOptions.map((option) => (
+                <option key={option}>{option}</option>
+              ))}
+            </select>
+          </label>
+          <label className="project-consultation__field">
+            <span>Ano do TED</span>
+            <select
+              value={filters.tedYear}
+              onChange={(event) => updateTedFilter("tedYear", event.target.value)}
+            >
+              {tedYearOptions.map((option) => (
+                <option key={option}>{option}</option>
+              ))}
+            </select>
+          </label>
+          <label className="project-consultation__field">
+            <span>Órgão concedente</span>
+            <select
+              value={filters.tedFunder}
+              onChange={(event) => updateTedFilter("tedFunder", event.target.value)}
+            >
+              {tedFunderOptions.map((option) => (
+                <option key={option}>{option}</option>
+              ))}
+            </select>
+          </label>
+          <label className="project-consultation__field">
+            <span>TED suporte</span>
+            <select
+              value={filters.tedSupport}
+              onChange={(event) => updateTedFilter("tedSupport", event.target.value)}
+            >
+              {supportOptions.map((option) => (
                 <option key={option}>{option}</option>
               ))}
             </select>
           </label>
           <button
             type="button"
-            onClick={() => updateFilter("project", allOption)}
-            disabled={filters.project === allOption}
+            onClick={clearTedFilters}
+            disabled={!hasTedFilter}
           >
             Limpar consulta
           </button>
         </div>
         <div className="project-consultation__result">
           <article>
-            <span>{selectedProject ? "Projeto selecionado" : "Recorte atual"}</span>
-            <strong>{selectedProject ? selectedProject.title : "Todos os projetos"}</strong>
+            <span>{hasTedFilter ? "Filtro de TED ativo" : "Recorte atual"}</span>
+            <strong>
+              {selectedTed
+                ? `TED ${filters.ted}`
+                : hasTedFilter
+                  ? `${activeTedFilterCount} filtro${activeTedFilterCount === 1 ? "" : "s"} aplicado${activeTedFilterCount === 1 ? "" : "s"}`
+                  : "Todos os TEDs"}
+            </strong>
           </article>
           <div className="project-consultation__facts">
             <div>
-              <span>Coordenação</span>
-              <strong>{selectedProject ? selectedProject.unit : projectCountLabel}</strong>
+              <span>{selectedTed ? "Projetos vinculados" : "TEDs no recorte"}</span>
+              <strong>
+                {selectedTed
+                  ? `${tedTotals.projects} projeto${tedTotals.projects === 1 ? "" : "s"}`
+                  : tedCountLabel}
+              </strong>
             </div>
             <div>
               <span>Valor total</span>
-              <strong>{brl.format(selectedProject ? selectedProject.total : totals.total)}</strong>
+              <strong>{brl.format(tedTotals.total)}</strong>
             </div>
             <div>
               <span>Realizado</span>
-              <strong>{brl.format(selectedProject ? selectedProject.realized : totals.realized)}</strong>
+              <strong>{brl.format(tedTotals.realized)}</strong>
             </div>
             <div>
               <span>Saldo atual</span>
-              <strong>{brl.format(selectedProject ? selectedProject.currentBalance : totals.balance)}</strong>
+              <strong>{brl.format(tedTotals.balance)}</strong>
             </div>
           </div>
         </div>
