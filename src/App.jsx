@@ -291,7 +291,7 @@ function App() {
     () => optionList(allTedProjects.map((project) => project.funder)),
     [allTedProjects],
   );
-  const allTedCount = Math.max(tedOptions.length - 1, 0);
+  const allTedCount = allTedProjects.length;
 
   const updateTedFilter = (key, value) =>
     setFilters((current) => ({
@@ -422,11 +422,7 @@ function App() {
 
   const tedTotals = useMemo(
     () => ({
-      tedCount: new Set(
-        tedProjectsInScope
-          .map((project) => project.instrumentNumber)
-          .filter(Boolean),
-      ).size,
+      tedCount: tedProjectsInScope.length,
       projects: tedProjectsInScope.length,
       total: sumBy(tedProjectsInScope, "total"),
       realized: sumBy(tedProjectsInScope, "realized"),
